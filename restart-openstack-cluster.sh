@@ -3,6 +3,7 @@
 
 controller_name=(${!controller_map[@]});
 
+mv /var/lib/mysql/gvwstate.dat /var/lib/mysql/gvwstate.dat.bak
 galera_new_cluster
 
 for ((i=0; i<${#controller_map[@]}; i+=1));
@@ -13,11 +14,13 @@ for ((i=0; i<${#controller_map[@]}; i+=1));
           echo "controller01"
           ssh root@$ip systemctl restart rabbitmq-server
         else
+          ssh root@$ip mv /var/lib/mysql/gvwstate.dat /var/lib/mysql/gvwstate.dat.bak
           ssh root@$ip systemctl restart mariadb
           ssh root@$ip systemctl restart rabbitmq-server 
         fi
   done;
 
+ceph-rest-api -n client.admin > /dev/null 2>&1 &
 
 ssh controller01 pcs cluster start --all
 ssh network01 pcs cluster start --all
